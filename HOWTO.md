@@ -1,8 +1,9 @@
-# Guía de Uso del Simulador de Planificación y Gestión de Memoria 
+# Guía de Uso del Simulador de Planificación y Gestión de Memoria
 
 ## Descripción
 
 Este software es un simulador de Sistema Operativo con Interfaz Gráfica (GUI) diseñado para demostrar visualmente la gestión de procesos y memoria.
+
 Implementa:
 
 * Planificación de CPU **SRTF** (Shortest Remaining Time First) **apropiativo** (con desalojo).
@@ -13,19 +14,27 @@ El simulador incorpora además:
 * Lógica de **Intercambio (Swapping)**.
 * Control estricto del **Grado de Multiprogramación global** y del **grado de multiprogramación en memoria**.
 
-
 ## Requisitos del Sistema
+
+### Para utilizar el ejecutable
+
+* **Sistema Operativo:** Windows.
+* No requiere instalar Python ni dependencias.
+
+### Para ejecutar desde el código fuente
 
 * **Sistema Operativo:** Windows, Linux o macOS.
 * **Python:** Versión 3.x instalada.
+* **Tkinter:** Disponible en la instalación de Python.
 * **Librerías externas:** `Pillow` (para iconos e imágenes).
-
 
 ## Instalación y Dependencias
 
-El simulador utiliza:
+Si se utiliza `Simulador_VG3.exe`, no es necesario instalar dependencias.
 
-* `tkinter` (incluido por defecto en Python) para la GUI.
+Para ejecutar desde el código fuente, el simulador utiliza:
+
+* `tkinter` para la GUI.
 * `Pillow` para el manejo de iconos.
 
 Pasos:
@@ -34,25 +43,34 @@ Pasos:
 2. Ejecutar:
 
    ```bash
-   pip install Pillow
-   ```
-
-Si `pip` no se reconoce, revisar que en la instalación de Python se haya marcado **“Add Python to PATH”**.
-
-
-## Ejecución del Simulador
-
-1. Navegar a la carpeta del proyecto en la terminal.
-2. Ejecutar:
-
-   ```bash
-   python gui.py
+   python -m pip install Pillow
    ```
 
 > [!NOTE]
-> No ejecutar `simulador_motor.py` ni `lector_csv.py` directamente.
-> El punto de entrada de la aplicación es **`gui.py`**.
+> Si no se reconoce el comando `python` en Windows, revisar que durante su instalación se haya marcado **“Add Python to PATH”**.
+> En Linux o macOS puede ser necesario utilizar `python3` en lugar de `python`.
+> Algunas distribuciones de Linux requieren instalar Tkinter por separado.
 
+## Ejecución del Simulador
+
+### Opción 1: ejecutable para Windows
+
+1. Abrir la carpeta del proyecto.
+2. Ejecutar `Simulador_VG3.exe`.
+3. Presionar **“Cargar CSV”** y seleccionar un archivo de la carpeta `csv`.
+
+### Opción 2: desde el código fuente
+
+1. Navegar en la terminal a la carpeta raíz del proyecto, donde se encuentran las carpetas `src`, `csv` e `iconos`.
+2. Ejecutar:
+
+   ```bash
+   python src/main.py
+   ```
+
+> [!NOTE]
+> El punto de entrada de la aplicación es **`src/main.py`**, que inicia la interfaz gráfica definida en `gui.py`.
+> No ejecutar `simulador_motor.py` ni `lector_csv.py` directamente.
 
 ## Preparación del Archivo CSV
 
@@ -60,12 +78,12 @@ El simulador toma como entrada un archivo `.csv` (valores separados por coma) qu
 
 ### Campos requeridos
 
-| Campo      | Descripción                                                | Ejemplo |
+| Campo | Descripción | Ejemplo |
 | ---------- | ---------------------------------------------------------- | ------- |
-| **ID**     | Identificador único del proceso (entero positivo).         | 1       |
-| **TAMANO** | Tamaño del proceso en KB (máx. ~250 KB para ser admitido). | 200     |
-| **TA**     | Tiempo de arribo al sistema.                               | 0       |
-| **TI**     | Tiempo total de irrupción de CPU (burst total de CPU).     | 5       |
+| **ID** | Identificador único del proceso (entero positivo). | 1 |
+| **TAMANO** | Tamaño del proceso en KB (máximo 250 KB para ingresar a memoria). | 200 |
+| **TA** | Tiempo de arribo al sistema. | 0 |
+| **TI** | Tiempo total de irrupción de CPU (burst total de CPU). | 5 |
 
 > [!NOTE]
 > `TI` es el **tiempo total de CPU** del proceso.
@@ -92,7 +110,6 @@ El lector de CSV es flexible con los encabezados (ignora mayúsculas, acentos y 
 
 Si no se detecta encabezado válido pero hay al menos 4 columnas, se asume orden fijo: `ID, TAMANO, TA, TI`.
 
-
 ## Flujo de Uso e Interfaz
 
 ### 1. Carga de datos
@@ -116,6 +133,7 @@ No hay corridas automáticas; el avance es manual:
 
   * Avanza el reloj del simulador en **1 unidad de tiempo**.
   * Dispara todos los eventos de ese instante: arribos, admisiones, swaps, desalojos, finalizaciones, etc.
+
 * **Botón “Reiniciar”:**
 
   * Detiene la simulación actual.
@@ -135,6 +153,7 @@ La interfaz se organiza en paneles, actualizados en cada Tick:
   * **Terminados:** procesos completados.
 
 * **Consola de eventos:**
+
   Lista textual que describe qué pasó en el instante actual, por ejemplo:
 
   * `Arriban P1, P2`
@@ -142,6 +161,7 @@ La interfaz se organiza en paneles, actualizados en cada Tick:
   * `Swap: Sale P4(R:8) ↔ Entra P5(R:2) en P1`
 
 * **Panel inferior – Tabla de particiones:**
+
   Representación de la memoria física:
 
   * Muestra **ID de partición**, **dirección base**, **tamaño**, **contenido** (SO, proceso o libre) y **fragmentación interna (FI)**.
@@ -152,19 +172,18 @@ La interfaz se organiza en paneles, actualizados en cada Tick:
   * Debajo, se muestran los promedios y el rendimiento (throughput) luego de que la simulación llega al final.
   * Adicionalmente, al finalizar, se abre una ventana con la tabla detallada por proceso (arribo, 1ª CPU, fin, servicio, W, R, T).
 
-
 ## Políticas y Reglas de Negocio Implementadas
 
 ### A. Estructura de memoria (particiones fijas)
 
 Se simula una memoria total de **550 KB** con el siguiente esquema:
 
-| Partición | Base | Tamaño | Uso típico                    |
+| Partición | Base | Tamaño | Uso típico |
 | :-------: | :--: | :----: | ----------------------------- |
-|   **0**   |   0  | 100 KB | Sistema Operativo (reservada) |
-|   **1**   |  100 | 250 KB | Procesos grandes              |
-|   **2**   |  350 | 150 KB | Procesos medianos             |
-|   **3**   |  500 |  50 KB | Procesos pequeños             |
+| **0** | 0 | 100 KB | Sistema Operativo (reservada) |
+| **1** | 100 | 250 KB | Procesos grandes |
+| **2** | 350 | 150 KB | Procesos medianos |
+| **3** | 500 | 50 KB | Procesos pequeños |
 
 > [!IMPORTANT]
 > Un proceso solo puede ubicarse en particiones de usuario (1, 2 o 3).
@@ -206,8 +225,8 @@ El Swapping se aplica cuando:
 
 Reglas:
 
-* Se define un conjunto de posibles víctimas: procesos en memoria (CPU + Listos) cuyo tamaño cabe en la partición que podría usar el nuevo proceso.
-* La **víctima** es el proceso con **mayor `t_restante`** (SRTF inverso).
+* Se define un conjunto de posibles víctimas: procesos residentes cuya partición puede alojar al nuevo proceso y cuyo tiempo restante es mayor que el del candidato.
+* La **víctima** es el proceso con **mayor `t_restante`** entre los elegibles (SRTF inverso).
 * Acción:
 
   * Víctima → se pasa a **L/S** y se libera su partición.
@@ -232,12 +251,11 @@ Reglas:
   * Si un proceso entra a **Listos** (por admisión o swap) con menor `t_restante` que el proceso en ejecución, entonces se produce desalojo inmediato.
   * El proceso desalojado vuelve a la cola de Listos.
 
-
 ## Interpretación de Métricas Finales
 
 Al finalizar la simulación se muestra, por proceso:
 
-* **Arribo:** tiempo en que entra al sistema (`TA`).
+* **Arribo:** tiempo de arribo indicado en el CSV (`TA`).
 * **1ª CPU:** primer instante en que toma la CPU.
 * **Fin:** instante en que finaliza.
 * **Servicio:** tiempo total de CPU (`TI`).
@@ -246,12 +264,15 @@ Al finalizar la simulación se muestra, por proceso:
 Fórmulas:
 
 * **Retorno T:**
+
   T = fin - arribo
-  
+
 * **Espera W:**
+
   W = T - servicio
 
 * **Respuesta R:**
+
   R = 1ª CPU - arribo
 
 Ejemplo breve:
@@ -262,11 +283,12 @@ Ejemplo breve:
   * 1ª CPU = 5
   * Fin = 12
   * Servicio (TI) = 4
+
 * Entonces:
 
-  * ( T = 12 - 2 = 10 )
-  * ( W = 10 - 4 = 6 )
-  * ( R = 5 - 2 = 3 )
+  * T = 12 - 2 = 10
+  * W = 10 - 4 = 6
+  * R = 5 - 2 = 3
 
 Promedios:
 
@@ -275,9 +297,10 @@ Promedios:
   * Espera promedio
   * Respuesta promedio
   * Retorno promedio
-* Y el **throughput** (rendimiento):
-  Throughput = (procesos terminados) / (tiempo total de simulación)
 
+* Y el **throughput** (rendimiento):
+
+  Throughput = (procesos terminados) / (tiempo total de simulación)
 
 ## Diferencia entre “Nuevos” y “Listos y Suspendidos (L/S)”
 
@@ -305,7 +328,6 @@ Conceptualmente:
 2. Procesos con tamaño **> 250 KB** nunca serán admitidos en memoria: pueden aparecer en L/S como “no admitidos”.
 3. Seguridad: si el reloj supera las **500 t.u.**, la simulación se detiene automáticamente.
 
-
 ## Solución de Problemas Frecuentes
 
 ### Error: `ModuleNotFoundError: No module named 'PIL'`
@@ -314,7 +336,7 @@ Conceptualmente:
 * Solución:
 
   ```bash
-  pip install Pillow
+  python -m pip install Pillow
   ```
 
 ### Error al cargar CSV: “Valores no enteros” o “Estructura incorrecta”
@@ -331,4 +353,3 @@ Conceptualmente:
 
   * Si ya hay 5 procesos activos (en memoria o en L/S), el proceso no puede entrar al sistema.
   * Una vez que finalice o salga alguno, el proceso pendiente será admitido automáticamente y dejará de aparecer como “Sin Arribar”.
-
